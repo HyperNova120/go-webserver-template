@@ -2,25 +2,25 @@ package main
 
 import (
 	"embed"
+	"io/fs"
+	"net/http"
 
-	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/hypernova120.net/go-webserver-template/api"
 )
 
+//go:embed static
 var embeddedFiles embed.FS
 
 func main() {
 	r := gin.Default()
 	api.RegisterRoutes(r)
 
-	//subFS, err := fs.Sub(embeddedFiles, "static")
-	dir, err := static.EmbedFolder(embeddedFiles, "static")
+	subFS, err := fs.Sub(embeddedFiles, "static")
 	if err != nil {
 		panic(err)
 	}
 
-	//r.StaticFS("/", http.FS(subFS))
-	r.Use(static.Serve("/", dir))
+	r.NoRoute(gin.WrapH(http.FileServer(http.FS(subFS))))
 	r.Run(":8080")
 }
